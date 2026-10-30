@@ -281,7 +281,7 @@ describe("chatOverLadder mocked provider failover", () => {
     ).resolves.toEqual({ text: "mock fallback answer", toolCalls: [] });
 
     expect(chat.mock.calls.some((call) => /^(gemini|gemma)/i.test(call[2].model))).toBe(true);
-    expect(fallbackNotices.some((notice) => /Switched to gemini\\//i.test(notice))).toBe(true);
+    expect(fallbackNotices.some((notice) => /Switched to gemini\//i.test(notice))).toBe(true);
   });
 
   it("reports an exhausted ladder when every reachable mocked route fails", async () => {

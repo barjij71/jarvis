@@ -49,7 +49,7 @@ export function parseSkillFile(fileName: string, rawContent: string, now = Date.
     const data = parsed as Record<string, unknown>;
     name = clean(data.name, 80);
     description = clean(data.description, 240);
-    content = clean(data.content ?? data.instructions, MAX_SKILL_CONTENT_CHARS);
+    content = typeof (data.content ?? data.instructions) === "string" ? String(data.content ?? data.instructions).trim() : "";
     keywords = (Array.isArray(data.keywords) ? data.keywords : [])
       .filter((v): v is string => typeof v === "string")
       .map(v => clean(v, 40)).filter(Boolean).slice(0, 12);
@@ -57,7 +57,7 @@ export function parseSkillFile(fileName: string, rawContent: string, now = Date.
     const parsed = parseFrontmatter(rawContent);
     name = clean(parsed.metadata.name, 80);
     description = clean(parsed.metadata.description, 240);
-    content = clean(parsed.body, MAX_SKILL_CONTENT_CHARS);
+    content = parsed.body.trim();
     keywords = (parsed.metadata.keywords || parsed.metadata.triggers || "")
       .split(",").map(v => clean(v, 40)).filter(Boolean).slice(0, 12);
   }

@@ -41,6 +41,7 @@ import { agentResult, resultId, type ResultStatus } from "./results";
 import type { ActionSpec } from "./types";
 import { reviewCompletion } from "./completion";
 import { claudeGuidanceFor } from "./claudeLibrary";
+import { skillPromptFor } from "./skillStore";
 
 /** Past turns sent with each chat request (storage keeps more). */
 const SENT_HISTORY_TURNS = 12;
@@ -291,6 +292,7 @@ export function createBrain(opts: BrainOptions = {}): Brain {
         content:
           buildSystemPrompt(config, facts, deps.remote != null, deps.tv != null, !!scope) +
           claudeGuidanceFor(text) +
+          skillPromptFor(text) +
           (scope
             ? `\n\n${scope.context}\nTASK PACKAGE\n${JSON.stringify({
                 objective: text,

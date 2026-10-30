@@ -38,4 +38,35 @@ describe("Claude reference library", () => {
   it("does not claim that the selected provider is Claude", () => {
     expect(claudeGuidanceFor("fix code")).not.toMatch(/You are Claude/i);
   });
+  
+  it("recognizes explicit Arabic coding, research, and writing requests", () => {
+    expect(claudeGuidanceKind("برمج لي أداة بسيطة")).toBe("coding");
+    expect(claudeGuidanceKind("ابحث عن مصادر موثوقة وقارن بينها")).toBe("research");
+    expect(claudeGuidanceKind("اكتب رسالة رسمية قصيرة")).toBe("writing");
+  });
+
+  it("recognizes Moroccan Darija research, writing, and general reasoning", () => {
+    expect(claudeGuidanceKind("قلب ليا على مصادر وقارن المعلومات")).toBe("research");
+    expect(claudeGuidanceKind("صايب ليا رسالة قصيرة")).toBe("writing");
+    expect(claudeGuidanceKind("شنو الفرق بين هاد الجوج؟")).toBe("general");
+  });
+
+  it("keeps general reasoning for Arabic questions without specialist intent", () => {
+    expect(claudeGuidanceKind("اشرح لي الفكرة ببساطة")).toBe("general");
+  });
+
+  it("does not inject archive paths or permission-changing instructions", () => {
+    for (const prompt of [
+      "Fix the bug and run tests",
+      "Research this question",
+      "Rewrite this paragraph",
+      "شنو الفرق بين هاد الجوج؟",
+    ]) {
+      const guidance = claudeGuidanceFor(prompt);
+      expect(guidance).not.toContain("ANTHROPIC/CLAUDE-OPUS-5.5.md");
+      expect(guidance).not.toMatch(/ignore all previous instructions/i);
+      expect(guidance).not.toMatch(/grant (?:new )?tool permissions/i);
+    }
+  });
+
 });

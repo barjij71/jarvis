@@ -40,6 +40,7 @@ import { WorkflowJournal } from "./workflow";
 import { agentResult, resultId, type ResultStatus } from "./results";
 import type { ActionSpec } from "./types";
 import { reviewCompletion } from "./completion";
+import { claudeGuidanceFor } from "./claudeLibrary";
 
 /** Past turns sent with each chat request (storage keeps more). */
 const SENT_HISTORY_TURNS = 12;
@@ -289,6 +290,7 @@ export function createBrain(opts: BrainOptions = {}): Brain {
         role: "system",
         content:
           buildSystemPrompt(config, facts, deps.remote != null, deps.tv != null, !!scope) +
+          claudeGuidanceFor(text) +
           (scope
             ? `\n\n${scope.context}\nTASK PACKAGE\n${JSON.stringify({
                 objective: text,

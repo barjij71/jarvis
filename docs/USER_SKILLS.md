@@ -37,7 +37,7 @@ JSON example:
 - Maximum saved skills: 50.
 - At most 3 enabled skills are included in one prompt, with an aggregate instruction budget of 18,000 characters.
 - Skills are stored in the app's local WebView storage under `jarvis.user-skills.v1`; this is local to that app installation/profile and is not automatically synchronized between devices.
-- Skills can be enabled or disabled and removed from Settings. Removing a skill deletes its local saved entry.
+- Imported skills are disabled by default. Review the instruction preview, then explicitly enable or disable a skill in Settings. Skills can also be removed; removal deletes the local saved entry.
 
 ## Security model
 

@@ -3409,3 +3409,56 @@ html.app-mobile .activity-foot {
   font-size: 12.5px;
   text-align: left;
 }
+
+
+/* ── Pro UX refinement (2026): accessible, tactile, responsive ─────────────── */
+:root {
+  --r: 14px;
+  --r-sm: 10px;
+  --motion-fast: 140ms;
+  --motion-ui: 220ms;
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--accent) 24%, transparent);
+  --surface-glass: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+}
+html, body, #root { text-rendering: optimizeLegibility; }
+button, input, textarea, select { font: inherit; }
+button { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible,
+select:focus-visible, [role="button"]:focus-visible {
+  outline: 2px solid var(--accent-soft);
+  outline-offset: 3px;
+}
+::selection { background: color-mix(in srgb, var(--accent) 30%, transparent); color: var(--text-pri); }
+* { scrollbar-color: color-mix(in srgb, var(--accent) 26%, #27313c) transparent; scrollbar-width: thin; }
+button, .icon-btn, .btn, .seg-btn, .chip button {
+  transition-duration: var(--motion-fast);
+}
+.icon-btn {
+  width: 38px; height: 38px; border-radius: 11px;
+  background: color-mix(in srgb, var(--bg-elevated) 82%, transparent);
+  border-color: var(--border);
+}
+.icon-btn:hover { transform: translateY(-1px); }
+.icon-btn:active { transform: translateY(0) scale(.96); }
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+textarea, select {
+  accent-color: var(--accent);
+}
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus-visible,
+textarea:focus-visible, select:focus-visible { box-shadow: var(--focus-ring); }
+@media (hover: none) {
+  .icon-btn:hover { transform: none; box-shadow: none; }
+}
+@media (max-width: 720px) {
+  :root { --r: 16px; --r-sm: 12px; }
+  .icon-btn { width: 42px; height: 42px; }
+  button, [role="button"] { touch-action: manipulation; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}

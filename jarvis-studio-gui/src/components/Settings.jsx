@@ -394,7 +394,7 @@ export default function Settings({
       const next = [...skills, imported];
       saveSkills(next);
       setSkills(next);
-      setSkillMessage('Imported "' + imported.name + '". It is now available to JARVIS.');
+      setSkillMessage('Imported "' + imported.name + '". Review its instructions, then enable it when ready.');
     } catch (error) {
       setSkillMessage(error instanceof Error ? error.message : "Could not import this skill.");
     } finally {
@@ -1311,6 +1311,10 @@ export default function Settings({
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="sp-label">{skill.name}</div>
                   <div className="sp-desc">{skill.description || skill.sourceName}</div>
+                  <details style={{ marginTop: 8 }}>
+                    <summary className="sp-desc" style={{ cursor: "pointer" }}>Review instructions</summary>
+                    <pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", fontSize: 12, maxHeight: 220, overflow: "auto" }}>{skill.content}</pre>
+                  </details>
                   <label className="sp-check" style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
                     <input
                       type="checkbox"

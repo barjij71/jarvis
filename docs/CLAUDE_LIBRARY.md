@@ -14,7 +14,7 @@ This fork contains a small, original reference pack under `jarvis-studio-gui/src
 
 Keep source files in a separate folder such as `claude-library/imported/` and maintain a manifest containing the filename, source URL or archive, license/provenance status, and a short description. Do not automatically inject every imported file into every conversation: prompt dumps can be stale, oversized, inaccurate, or contain hostile instructions. Review each file, then add a bounded and task-specific summary to the selector.
 
-Before importing the CL4R1T4S archive, verify that each file may be redistributed and that any API keys, credentials, personal data, or accidental secrets are removed. The archive's top-level license does not by itself prove rights to every third-party file.
+Before importing the CL4R1T4S archive, verify that each file may be redistributed and that any API keys, credentials, personal data, or accidental secrets are removed. The archive's top-level license does not by itself prove rights to every third-party file. The existing inventory report flags `ANTHROPIC/CLAUDE-OPUS-5.5.md` for manual review because it matches a credential-like pattern; this is a heuristic, not proof of a secret. Keep that file quarantined unless a human reviews the file, its provenance/license, and a secret-scan result and explicitly approves it.
 
 ## Validation
 
@@ -25,6 +25,7 @@ npm run typecheck
 npx vitest run src/brain/claudeLibrary.test.ts
 npm test
 npm run lint
+npm run build
 ```
 
 These checks must be run in CI or a development environment; creating this change does not itself prove they pass.

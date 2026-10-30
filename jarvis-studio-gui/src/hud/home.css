@@ -632,3 +632,41 @@
 .home--cards-hud .rt-name { color: var(--ac2); }
 .home--font-hud .rt-name { font-family: var(--disp); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
 .home--font-hud .rt-when, .home--font-hud .rt-note { font-family: var(--mono); letter-spacing: 0.04em; }
+
+
+/* ── Pro UX refinement: calmer hierarchy and clearer interaction states ─── */
+.home {
+  --h-r: 16px;
+  --h-r-s: 11px;
+}
+.home :is(button, [role="button"], a):focus-visible {
+  outline: 2px solid var(--ac2, var(--ac));
+  outline-offset: 3px;
+}
+.home :is(button, [role="button"]) {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.home :is(input, textarea, select) {
+  accent-color: var(--ac, #00e5ff);
+}
+.home :is(input, textarea, select):focus-visible {
+  outline: 2px solid var(--ac, #00e5ff);
+  outline-offset: 2px;
+}
+.home :is(.panel, .widget, .card, [class*="panel-card"]) {
+  transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+.home :is(.panel, .widget, .card, [class*="panel-card"]):hover {
+  border-color: color-mix(in srgb, var(--ac, #00e5ff) 20%, var(--h-line-2));
+}
+@media (max-width: 720px) {
+  .home { --h-r: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home *, .home *::before, .home *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

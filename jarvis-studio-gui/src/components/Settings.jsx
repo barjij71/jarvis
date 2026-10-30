@@ -8,6 +8,7 @@ import {
 } from "../brain/platform";
 import { modelClassFor } from "../brain/modelPolicy";
 import * as quota from "../brain/quota";
+import { loadSkills, parseSkillFile, saveSkills, MAX_SKILLS } from "../brain/skillStore";
 import Icon from "./Icon";
 import StateMessage from "./StateMessage";
 import { ActionRow, Field, Group, More, Toggle, WIDE_QUERY, Warn } from "./Sheet";
@@ -380,6 +381,48 @@ export default function Settings({
   // set_overlay) so saving Settings doesn't silently reset it to "except".
   const [ovlMode] = useState(sysInfo.overlay?.mode ?? "except");
   const [newApp, setNewApp] = useState("");
+  const [skills, setSkills] = useState(() => loadSkills());
+  const [skillMessage, setSkillMessage] = useState("");
+
+  const importSkill = async (event) => {
+    const input = event.currentTarget;
+    const file = input.files && input.files[0];
+    if (!file) return;
+    try {
+      if (skills.length >= MAX_SKILLS) throw new Error("You have reached the 50-skill limit.");
+      const imported = parseSkillFile(file.name, await file.text());
+      const next = [...skills, imported];
+      saveSkills(next);
+      setSkills(next);
+      setSkillMessage('Imported "' + imported.name + '". It is now available to JARVIS.');
+    } catch (error) {
+      setSkillMessage(error instanceof Error ? error.message : "Could not import this skill.");
+    } finally {
+      input.value = "";
+    }
+  };
+
+  const updateSkill = (id, changes) => {
+    const next = skills.map((skill) => skill.id === id ? { ...skill, ...changes } : skill);
+    try {
+      saveSkills(next);
+      setSkills(next);
+      setSkillMessage("Skill library saved.");
+    } catch (error) {
+      setSkillMessage(error instanceof Error ? error.message : "Could not save the skill library.");
+    }
+  };
+
+  const removeSkill = (id) => {
+    const next = skills.filter((skill) => skill.id !== id);
+    try {
+      saveSkills(next);
+      setSkills(next);
+      setSkillMessage("Skill removed.");
+    } catch (error) {
+      setSkillMessage(error instanceof Error ? error.message : "Could not update the skill library.");
+    }
+  };
 
   const addApp = () => {
     const a = newApp
@@ -1226,6 +1269,80 @@ export default function Settings({
     </>
   );
 
+  const skillsPage = (
+    <>
+      <Group title="Import a skill">
+        <div className="sp-field">
+          <p className="sp-desc">
+            Add a reusable skill from a Markdown, text, or JSON file. JARVIS reads its instructions as reference text;
+            uploaded scripts are never executed.
+          </p>
+          <label className="sp-label" htmlFor="jarvis-skill-upload">Choose skill file</label>
+          <input
+            id="jarvis-skill-upload"
+            className="sp-input"
+            type="file"
+            accept=".md,.markdown,.txt,.json,text/markdown,text/plain,application/json"
+            onChange={importSkill}
+          />
+          <p className="sp-desc">
+            Markdown may start with name, description, and keywords metadata. JSON uses name, description, keywords, and content.
+            Each skill is limited to 12,000 instruction characters; up to 50 skills can be stored locally.
+          </p>
+          <a
+            className="sp-link"
+            href={"data:text/markdown;charset=utf-8," + encodeURIComponent("---\nname: Example Skill\ndescription: A short description\nkeywords: research, sources\n---\nPrefer primary sources, compare dates, and state uncertainty clearly.")}
+            download="jarvis-skill-template.md"
+          >
+            Download example skill template
+          </a>
+          {skillMessage && <p className="sp-desc" role="status" aria-live="polite">{skillMessage}</p>}
+        </div>
+      </Group>
+      <Group title={"Your skills (" + skills.length + ")"}>
+        {skills.length === 0 ? (
+          <StateMessage variant="empty" icon="spark" title="No custom skills yet">
+            Import a skill to teach JARVIS a reusable workflow, writing style, research method, or domain checklist.
+          </StateMessage>
+        ) : (
+          <div className="dirlist">
+            {skills.map((skill) => (
+              <div key={skill.id} className="dirlist-row" style={{ alignItems: "flex-start", gap: 12 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="sp-label">{skill.name}</div>
+                  <div className="sp-desc">{skill.description || skill.sourceName}</div>
+                  <label className="sp-check" style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
+                    <input
+                      type="checkbox"
+                      checked={skill.enabled}
+                      onChange={(event) => updateSkill(skill.id, { enabled: event.target.checked })}
+                    />
+                    Use this skill
+                  </label>
+                </div>
+                <button
+                  type="button"
+                  className="dirlist-rm"
+                  aria-label={"Remove skill " + skill.name}
+                  title="Remove skill"
+                  onClick={() => removeSkill(skill.id)}
+                >
+                  <Icon name="close" size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </Group>
+      <Group title="Safety">
+        <p className="sp-desc">
+          Skills can guide how JARVIS researches, writes, plans, or performs a task, but they cannot grant new device permissions,
+          bypass confirmations, add executable tools, or override verification rules. Review a skill before enabling it.
+        </p>
+      </Group>
+    </>
+  );
+
   const diagnosticsPage = (
     <>
       <Group title="Now">
@@ -1298,6 +1415,16 @@ export default function Settings({
         value: model !== "auto" ? model : PROVIDER_NAME[providerMode] || providerMode,
         tone: "on",
         body: modelsPage,
+      },
+      {
+        id: "skills",
+        title: "Skills",
+        icon: "spark",
+        desc: "Import, review, and manage reusable skills for JARVIS.",
+        words: "skills upload import learning custom markdown json teach",
+        value: skills.length ? String(skills.filter((skill) => skill.enabled).length) + " active" : "None",
+        tone: skills.some((skill) => skill.enabled) ? "on" : "off",
+        body: skillsPage,
       },
       {
         id: "routing",
@@ -1436,7 +1563,7 @@ export default function Settings({
   // The desktop's Settings groups, in its order.
   const byId = Object.fromEntries(pages.map((pg) => [pg.id, pg]));
   const sections = [
-    ["Intelligence", ["models", "keys", "routing", "automation"]],
+    ["Intelligence", ["models", "keys", "routing", "automation", "skills"]],
     ["Experience", ["voice", "interface", "files", "location", "calendar"]],
     ["Connections", ["linked"]],
     ["System", ["diagnostics"]],

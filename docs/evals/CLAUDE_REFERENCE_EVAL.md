@@ -58,6 +58,12 @@ Copy this block for each prompt:
 
 Compare on the same prompts and same provider/model where possible. If the provider/model differs, label the comparison **confounded** rather than attributing the difference to the instruction library. Do not aggregate tiny samples into a claim of general improvement.
 
+## Retry and side-effect safety gap
+
+- `ask.ts` retries model requests and returns the winning response; it does not dispatch tool calls itself. The mocked test below checks that only the successful response's tool-call payload is returned.
+- `loop.ts` contains an `actedAndFailed` guard for a phone task that acted and then failed, and `loop.test.ts` has a regression test refusing a reworded retry in that case. This is evidence for that specific path, not a universal idempotency guarantee for every tool/provider/timeout boundary.
+- **TODO:** add idempotency/receipt tests for each side-effecting dispatch boundary (especially process interruption after a real action but before the result is persisted). Until then, do not claim that all retries are duplicate-safe; inspect the workflow journal and tool-specific safeguards before enabling automatic retries of side effects.
+
 ## Current evaluation status
 
 - Automated fixture present: no, until this document is supplemented by a test harness that reads it.

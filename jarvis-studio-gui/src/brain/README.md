@@ -42,6 +42,8 @@ classing), `modelRemap.ts` (follows Google's model retirements), `providers/cata
 `memory/proceduralLearning.ts` (verified workflows), `platform/*` (the JS side of the
 Kotlin plugin), `mobile/screenConfig.ts`, `schedule/*`.
 
+`skillStore.ts` adds user-imported, locally stored skill guidance. It accepts bounded Markdown/text/JSON, never executes uploaded code, and injects at most three enabled skills into the prompt without changing the registered tool palette or permission checks.
+
 ## Tool dispositions on Android
 
 - **Ported as-is (pure HTTP/logic):** `get_weather`, `web_search`, `find_places`,

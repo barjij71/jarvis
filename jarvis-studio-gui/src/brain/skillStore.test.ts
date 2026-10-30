@@ -16,7 +16,7 @@ describe("user-imported skills", () => {
     expect(skill.name).toBe("Research Helper");
     expect(skill.keywords).toEqual(["research", "sources"]);
     expect(skill.content).toContain("Never run commands");
-    expect(skill.enabled).toBe(true);
+    expect(skill.enabled).toBe(false);
   });
   it("imports JSON skills", () => {
     const skill = parseSkillFile("darija.json", JSON.stringify({

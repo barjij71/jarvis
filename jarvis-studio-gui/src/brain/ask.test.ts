@@ -222,3 +222,105 @@ describe("rejectsTools", () => {
     expect(rejectsTools(e400("Invalid JSON payload: tools[0].function_declarations"))).toBe(false);
   });
 });
+
+
+describe("chatOverLadder mocked provider failover", () => {
+  const multiProviderConfig: BrainConfig = {
+    tier: "groq",
+    model: "openai/gpt-oss-120b",
+    keys: { groq: ["fake-groq-key"], gemini: ["fake-gemini-key"] },
+    autoSwitchModels: true,
+  };
+
+  beforeEach(() => {
+    quota.setStorage(fakeKV());
+    quota.reset();
+    setCatalogStorage(fakeKV());
+    setCatalog({});
+    resetLatency();
+    chat.mockReset();
+  });
+
+  const failureCases: Array<[string, () => Error]> = [
+    ["network failure", () => new TypeError("fetch failed")],
+    ["timeout", () => new Error("request timeout")],
+    ["quota exhaustion (HTTP 429)", () => new ProviderError("Groq 429", {
+      status: 429,
+      detail: "Requests per day (RPD): Limit 1000",
+    })],
+    ["authentication failure (HTTP 401)", () => new ProviderError("Groq 401", {
+      status: 401,
+      detail: "invalid API key",
+    })],
+    ["permission failure (HTTP 403)", () => new ProviderError("Groq 403", {
+      status: 403,
+      detail: "access forbidden",
+    })],
+    ["provider server error (HTTP 503)", () => new ProviderError("Groq 503", {
+      status: 503,
+      detail: "upstream unavailable",
+    })],
+  ];
+
+  it.each(failureCases)("falls through to a Google route after %s", async (_label, makeFailure) => {
+    chat.mockImplementation(async (_convo: unknown, _tools: unknown, opts: { model: string }) => {
+      if (/^(gemini|gemma)/i.test(opts.model)) {
+        return { text: "mock fallback answer", toolCalls: [] };
+      }
+      throw makeFailure();
+    });
+
+    const fallbackNotices: string[] = [];
+    await expect(
+      chatOverLadder(
+        [{ role: "user", content: "Compare these options" }],
+        [],
+        multiProviderConfig,
+        (notice) => fallbackNotices.push(notice),
+      ),
+    ).resolves.toEqual({ text: "mock fallback answer", toolCalls: [] });
+
+    expect(chat.mock.calls.some((call) => /^(gemini|gemma)/i.test(call[2].model))).toBe(true);
+    expect(fallbackNotices.some((notice) => /Switched to gemini\//i.test(notice))).toBe(true);
+  });
+
+  it("reports an exhausted ladder when every reachable mocked route fails", async () => {
+    chat.mockRejectedValue(new ProviderError("provider 503", {
+      status: 503,
+      detail: "mock upstream unavailable",
+    }));
+
+    await expect(
+      chatOverLadder(
+        [{ role: "user", content: "Explain this" }],
+        [],
+        multiProviderConfig,
+      ),
+    ).rejects.toBeInstanceOf(ExhaustedError);
+
+    expect(chat).toHaveBeenCalled();
+    expect(chat.mock.results.every((result) => result.type === "return")).toBe(true);
+  });
+
+  it("returns only the successful route's tool calls; failed attempts never dispatch tools here", async () => {
+    chat.mockImplementation(async (_convo: unknown, _tools: unknown, opts: { model: string }) => {
+      if (/^(gemini|gemma)/i.test(opts.model)) {
+        return {
+          text: "",
+          toolCalls: [{ id: "mock-safe", name: "read_webpage", args: { url: "https://example.invalid" } }],
+        };
+      }
+      throw new ProviderError("Groq 503", { status: 503, detail: "mock failure" });
+    });
+
+    const reply = await chatOverLadder(
+      [{ role: "user", content: "Research this" }],
+      [{ name: "read_webpage" } as never],
+      multiProviderConfig,
+    );
+
+    expect(reply.toolCalls).toEqual([
+      { id: "mock-safe", name: "read_webpage", args: { url: "https://example.invalid" } },
+    ]);
+  });
+});

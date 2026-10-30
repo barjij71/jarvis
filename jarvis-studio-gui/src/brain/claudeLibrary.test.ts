@@ -22,6 +22,19 @@ describe("Claude reference library", () => {
     expect(claudeGuidanceFor("Hello Jarvis")).toContain("REASONING");
   });
 
+  it("recognizes coding requests in Arabic and Moroccan Darija", () => {
+    expect(claudeGuidanceKind("صلح ليا هاد الباغ وشغل الاختبارات")).toBe("coding");
+    expect(claudeGuidanceFor("برمج ليا تطبيق")).toContain("SOFTWARE ENGINEERING");
+  });
+
+  it("recognizes research requests in Arabic and Moroccan Darija", () => {
+    expect(claudeGuidanceKind("قارن المصادر وتأكد من آخر إصدار")).toBe("research");
+  });
+
+  it("recognizes writing requests in Arabic and Moroccan Darija", () => {
+    expect(claudeGuidanceKind("كتب ليا إيميل ولخص هاد النص")).toBe("writing");
+  });
+
   it("does not claim that the selected provider is Claude", () => {
     expect(claudeGuidanceFor("fix code")).not.toMatch(/You are Claude/i);
   });

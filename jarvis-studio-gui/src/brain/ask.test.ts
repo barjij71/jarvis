@@ -241,7 +241,7 @@ describe("chatOverLadder mocked provider failover", () => {
     chat.mockReset();
   });
 
-  it.each([
+  const failureCases: Array<[string, () => Error]> = [
     ["network failure", () => new TypeError("fetch failed")],
     ["timeout", () => new Error("request timeout")],
     ["quota exhaustion (HTTP 429)", () => new ProviderError("Groq 429", {
@@ -260,7 +260,9 @@ describe("chatOverLadder mocked provider failover", () => {
       status: 503,
       detail: "upstream unavailable",
     })],
-  ])("falls through to a Google route after %s", async (_label, makeFailure) => {
+  ];
+
+  it.each(failureCases)("falls through to a Google route after %s", async (_label, makeFailure) => {
     chat.mockImplementation(async (_convo: unknown, _tools: unknown, opts: { model: string }) => {
       if (/^(gemini|gemma)/i.test(opts.model)) {
         return { text: "mock fallback answer", toolCalls: [] };

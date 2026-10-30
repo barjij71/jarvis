@@ -35,14 +35,18 @@ const GUIDANCE: Record<ClaudeGuidanceKind, string> = {
 };
 
 export function claudeGuidanceKind(text: string): ClaudeGuidanceKind {
-  const s = text.toLowerCase();
-  if (/\b(code|coding|debug|bug|typescript|javascript|python|kotlin|rust|repository|repo|github|test|build|compile|refactor|implement|program|api)\b/.test(s)) {
+  const s = text.toLocaleLowerCase();
+
+  // Arabic and Moroccan Darija are included because JARVIS is used bilingually.
+  // Keep coding first so requests that mention both implementation and research
+  // get the operational engineering guidance.
+  if (/\b(code|coding|debug|bug|typescript|javascript|python|kotlin|rust|repository|repo|github|test|build|compile|refactor|implement|program|api)\b|برمج|كود|الكود|صلح|إصلاح|اصلح|خطأ|باگ|اختبار|اختبارات|بناء|كمبايل|مستودع|غيتهاب|نفذ|تنفيذ|طور|طوّر|تطوير|تطبيق|مشروع/.test(s)) {
     return "coding";
   }
-  if (/\b(research|investigate|sources|citations|compare|verify|latest|evidence|fact.check|look up)\b/.test(s)) {
+  if (/\b(research|investigate|sources|citations|compare|verify|latest|evidence|fact.check|look up)\b|بحث|ابحث|قارن|مصادر|المصادر|تحقق|تأكد|آخر إصدار|دليل|أدلة|مراجع|مقارنة|واش صحيح|واش بصح/.test(s)) {
     return "research";
   }
-  if (/\b(write|rewrite|draft|polish|translate|email|memo|article|post|documentation|summari[sz]e)\b/.test(s)) {
+  if (/\b(write|rewrite|draft|polish|translate|email|memo|article|post|documentation|summari[sz]e)\b|كتب|اكتب|صياغة|عاود صيغ|ترجم|ترجمة|إيميل|بريد|لخص|تلخيص|مقال|وثق|توثيق|رسالة/.test(s)) {
     return "writing";
   }
   return "general";

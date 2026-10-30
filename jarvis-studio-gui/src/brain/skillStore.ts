@@ -80,8 +80,10 @@ export function loadSkills(storage?: SkillStorage): UserSkill[] {
     return parsed.filter((item): item is UserSkill =>
       !!item && typeof item === "object" &&
       typeof item.id === "string" && typeof item.name === "string" &&
-      typeof item.content === "string" && typeof item.enabled === "boolean" &&
-      item.content.length <= MAX_SKILL_CONTENT_CHARS
+      typeof item.description === "string" && typeof item.content === "string" &&
+      Array.isArray(item.keywords) && item.keywords.every((word: unknown) => typeof word === "string") &&
+      typeof item.enabled === "boolean" && typeof item.createdAt === "number" &&
+      typeof item.sourceName === "string" && item.content.length <= MAX_SKILL_CONTENT_CHARS
     ).slice(0, MAX_SKILLS);
   } catch { return []; }
 }

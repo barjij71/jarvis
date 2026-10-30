@@ -66,7 +66,7 @@ export function parseSkillFile(fileName: string, rawContent: string, now = Date.
   if (content.length > MAX_SKILL_CONTENT_CHARS) throw new Error("Skill instructions must be 12,000 characters or smaller.");
   return {
     id: slug(name) + "-" + now.toString(36), name, description, content, keywords,
-    enabled: true, createdAt: now, sourceName: clean(fileName, 160) || "uploaded-skill",
+    enabled: false, createdAt: now, sourceName: clean(fileName, 160) || "uploaded-skill",
   };
 }
 
